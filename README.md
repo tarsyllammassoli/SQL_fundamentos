@@ -35,6 +35,6 @@ Desenvolver domínio em SQL, incluindo:
 
 ## Obs.:
 
-Este repositório tem finalidade educacional e documenta a evolução no aprendizado de bancos de dados e SQL.
+Este repositório tem finalidade educacional e documenta a evolução no aprendizado de bancos de dados, SQL e Python.
 
 ---
