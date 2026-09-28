@@ -116,8 +116,55 @@ and pag_datavencimento <= @datafinal
 
 exec relatorio_cliente '2025-09-02 00:00:00.000', '2025-11-02 00:00:00.000'
 
+-- questao 3B
+
+select
+	emp_razaosocial,
+	sum(case when pag_datapagto is null then pag_valor else 0 end) as Aberto,
+	sum(case when pag_datapagto is not null then pag_valor else 0 end) as Pago
+from empresa
+join pagar on idempresa = fkempresa
+group by emp_razaosocial
+
 -- questao 4
 
 update empresa
 set emp_razaosocial = 'Não informado'
 where emp_razaosocial is null and idempresa in (select fkempresa from pagar)
+
+-- questao 5
+
+select * from empresa
+select * from receber
+
+update pagar
+set fkempresa = (select min(idempresa) from empresa)
+where fkempresa is null
+
+-- questao 6
+
+select top 3 descricao, sum(pag_valor) as valor_total
+from uf, cidade, empresa, pagar
+where iduf = fkuf
+and idcidade = fkcidade
+and idempresa = fkempresa
+group by descricao
+order by sum(pag_valor) desc
+
+-- questao 7 
+
+select emp_razaosocial as Empresa,
+	pag_datavencimento as Data_Vencimento,
+	pag_valor as Valor,
+	case
+		when pag_valor >= 10000 then 'Alto valor - Prioridade' 
+		when pag_valor < 10000 then 'Baixo valor' -- poderia usar direto else 'Baixo valor'
+	end as Classificação
+from empresa
+join pagar on idempresa = fkempresa
+where datediff(day, getdate(), pag_datavencimento) between 0 and 30 -- nesse caso, o datediff só se usa aqui no WHERE!
+
+-- questao 12
+
+alter table receber
+add rec_nrcheque2 decimal(10,2)
