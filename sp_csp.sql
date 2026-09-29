@@ -164,6 +164,133 @@ from empresa
 join pagar on idempresa = fkempresa
 where datediff(day, getdate(), pag_datavencimento) between 0 and 30 -- nesse caso, o datediff só se usa aqui no WHERE!
 
+	-- 1
+
+insert into movbanco(movban_descricao, movban_valor, movban_data, fkbanco)
+select pag_descricao, pag_valor, pag_Datavencimento, fkbanco
+from pagar
+where month(pag_datapagto) = month(getdate())
+and year(pag_datapagto) = year(getdate())
+
+-- 2
+
+select emp_razaosocial as Empresa,
+	cid_nome as Cidade,
+	descricao as Estado
+from empresa, cidade, uf
+where fkcidade = idcidade
+and fkuf = iduf
+and descricao in ('ES','BA')
+
+select * from uf
+
+-- 3
+
+select * from pagar
+
+select idempresa as Empresa
+from empresa
+where idempresa not in (select fkempresa from pagar)
+
+-- 4
+
+select idbanco as Bancos
+from Banco
+where idbanco not in (select fkbanco from pagar)
+
+-- 5
+
+select count(pag_fatura) as Faturas, 
+	sum(pag_valor) as 'Valor pago',
+	ban_descricao as Banco
+from pagar, banco
+where fkbanco = idbanco
+group by ban_descricao
+
+-- 6
+
+select emp_razaosocial, 
+	pag_Fatura, 
+	pag_datapagto,
+	datediff(dd, pag_datavencimento, getdate()) as Dias_atraso
+from empresa, pagar
+where idempresa = fkempresa
+and pag_datavencimento < getdate()
+and pag_datapagto is null
+
+-- 7
+
+select distinct emp_razaosocial as Empresa,
+	pag_valor as Conta
+from empresa, pagar
+where idempresa = fkempresa
+and pag_valor > 5000
+
+-- 8
+
+select distinct emp_razaosocial as Empresa,
+	sum(pag_valor) as 'Total pago'
+from empresa, pagar
+where idempresa = fkempresa
+and year(pag_datapagto) = 2026
+group by emp_Razaosocial
+
+-- 9
+
+select 
+	max(pag_valor) as 'Maior pagamento',
+	min(pag_valor) as 'Menor pagamento'
+from pagar
+where pag_Datapagto is not null
+
+-- 10
+
+alter table pagar
+add pag_usuario varchar(80)
+
+-- 11
+
+update pagar
+set pag_datapagto = getdate()
+where fkbanco = 1
+
+-- 12
+
+select ban_descricao as Banco,
+	pag_valor as Pagamento
+from banco, pagar
+where idbanco = fkbanco
+and pag_valor > (
+	select avg(pag_valor)
+	from pagar
+	where idbanco = fkbanco -- pq tem que calcular a media maior daquele proprio banco
+)
+
+-- 13
+
+create procedure sp_informa_datas
+(@datainicial date,
+@datafinal date,
+@uf varchar(2))
+as
+
+select
+	ram_descricao as Ramo,
+	descricao as UF,
+	sum(pag_valor) as 'Total pago'
+from pagar, 
+	empresa,
+	ramo, 
+	cidade, 
+	uf
+where idempresa = fkempresa
+and fkramo = idramo
+and fkcidade = idcidade
+and fkuf = iduf
+and pag_datapagto is not null
+and pag_Datapagto >= @datainicial
+and pag_datapagto <= @datafinal
+group by ram_descricao, descricao
 -- questao 12
 
 alter table receber
