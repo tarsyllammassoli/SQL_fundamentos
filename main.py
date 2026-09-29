@@ -1,3 +1,11 @@
+SELECT   colunas_que_voce_quer_mostrar
+FROM     tabela_onde_os_dados_estao
+JOIN     outra_tabela ON conexao_entre_elas
+WHERE    filtro_de_linhas (ex: idade > 18)
+GROUP BY colunas_para_agrupar (se usar COUNT, SUM, AVG)
+HAVING   filtro_das_agrupacoes (ex: COUNT(*) > 5)
+ORDER BY coluna_para_ordenar ASC/DESC;
+
 import sqlite3
 
 conexao = sqlite3.connect("banco.db")
