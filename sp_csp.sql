@@ -295,3 +295,79 @@ group by ram_descricao, descricao
 
 alter table receber
 add rec_nrcheque2 decimal(10,2)
+
+-- 14
+
+alter proc sp_informa_datas
+(@datainicial date,
+@datafinal date,
+@uf varchar(2),
+@valor int )
+as
+
+select
+	ram_descricao as Ramo,
+	descricao as UF,
+	sum(pag_valor) as 'Total pago'
+from pagar, 
+	empresa,
+	ramo, 
+	cidade, 
+	uf
+where idempresa = fkempresa
+and fkramo = idramo
+and fkcidade = idcidade
+and fkuf = iduf
+and pag_datapagto is not null
+and pag_Datapagto >= @datainicial
+and pag_datapagto <= @datafinal
+and descricao = isnull(@uf, descricao) -- nesse caso aqui, se o 1º item nao tiver nada, o bd põe a segunda opção amostra
+group by ram_descricao, descricao
+having sum(pag_valor) > @valor
+
+-- 15
+
+select * into ##pagar_temp from pagar
+
+-- 16
+
+select emp_razaosocial as Empresa,
+	idpagar as Idfatura,
+	pag_fatura as Fatura,
+	pag_descricao as Descrição,
+	pag_valor as Débito,
+	pag_datavencimento as Vencimento,
+	pag_datapagto as Pagamento,
+	case
+		when pag_datapagto is null and datediff(dd, pag_datavencimento,getdate()) > 0 then datediff(dd, pag_datavencimento, getdate())
+		else 0
+	end Dias_em_atraso
+from empresa
+join pagar on idempresa = fkempresa
+order by Dias_em_atraso
+
+-- 17
+
+-- a)
+
+alter table empresa
+add TESTE varchar(10)
+
+-- b)
+
+alter table empresa
+drop column TESTE
+
+-- c)
+
+drop table ##empresa_temp
+
+-- 18
+
+select emp_razaosocial as Empresa,
+	count(pag_fatura) as Faturas
+from empresa
+join pagar on idempresa = fkempresa
+where pag_datapagto is null
+and datediff(dd, pag_datavencimento, getdate()) > 10
+group by emp_razaosocial
